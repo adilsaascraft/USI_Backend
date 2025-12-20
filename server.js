@@ -10,6 +10,9 @@ import connectDB from "./config/db.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
+import webinarRoutes from "./routes/webinarRoutes.js";
+
+
 await connectDB();
 
 const app = express();
@@ -49,6 +52,9 @@ app.get("/", (req, res) => {
 // =======================
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
+
+app.use("/api", webinarRoutes);
+
 
 // =======================
 // Start server
