@@ -65,6 +65,23 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Additional fields in user profile
+    state: {
+      type: String,
+      trim: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    pincode: {
+      type: String,
+      trim: true,
+    },
+    profilePicture: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );

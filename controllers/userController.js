@@ -192,3 +192,75 @@ export const logoutUser = (req, res) => {
   res.clearCookie("refreshToken");
   res.json({ message: "Logged out successfully" });
 };
+
+
+// =======================
+// Get Profile
+// =======================
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      "-password -plainPassword -passwordResetToken -passwordResetExpires"
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// =======================
+// Update Profile
+// =======================
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const fields = [
+      "name",
+      "prefix",
+      "qualification",
+      "affiliation",
+      "mobile",
+      "country",
+      "city",
+      "state",
+      "pincode",
+    ];
+
+    fields.forEach((field) => {
+      if (req.body[field] !== undefined) user[field] = req.body[field];
+    });
+
+    // Update profile picture
+    if (req.file && req.file.location) {
+      // Delete old image from S3
+      if (user.profilePicture) {
+        const oldKey = user.profilePicture.split(`${process.env.AWS_BUCKET_NAME}/`)[1];
+        if (oldKey) {
+          await s3.send(
+            new DeleteObjectCommand({
+              Bucket: process.env.AWS_BUCKET_NAME,
+              Key: oldKey,
+            })
+          );
+        }
+      }
+      user.profilePicture = req.file.location;
+    }
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};

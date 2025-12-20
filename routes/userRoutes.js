@@ -5,8 +5,11 @@ import {
   loginUser,
   refreshAccessTokenUser,
   logoutUser,
+  getUserProfile,
+  updateUserProfile,
 } from "../controllers/userController.js";
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
+import { uploadUSIProfileImage } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -33,6 +36,23 @@ router.post(
   protect, // ensures user is logged in
   authorizeRoles("user"), // user-only
   logoutUser
+);
+
+// Get User Profile - User only
+router.get(
+  "/profile",
+  protect, // ensures user is logged in
+  authorizeRoles("user"), // user-only
+  getUserProfile
+);
+
+// Update User Profile - User only
+router.put(
+  "/profile",
+  protect, // ensures user is logged in
+  authorizeRoles("user"), // user-only
+  uploadUSIProfileImage.single("profilePicture"), // handles profile image upload
+  updateUserProfile
 );
 
 
