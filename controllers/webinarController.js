@@ -2,6 +2,36 @@
 import Webinar from "../models/Webinar.js";
 
 // =======================
+// Get Active Webinar by ID (public)
+// =======================
+export const getActiveWebinarById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const webinar = await Webinar.findOne({ _id: id, status: "Active" });
+
+    if (!webinar) {
+      return res.status(404).json({
+        success: false,
+        message: "Active webinar not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: webinar.toObject({ virtuals: true }),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch active webinar",
+      error: error.message,
+    });
+  }
+};
+
+
+// =======================
 // Get all webinars (public)
 // =======================
 export const getWebinars = async (req, res) => {
