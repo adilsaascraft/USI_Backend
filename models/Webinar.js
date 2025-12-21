@@ -79,8 +79,8 @@ WebinarSchema.virtual("dynamicStatus").get(function () {
 
   const now = moment.tz(tz);
 
-  if (now.isBefore(start)) return "Live";
-  if (now.isBetween(start, end, null, "[]")) return "Running";
+  if (now.isBefore(start)) return "Upcoming";
+  if (now.isBetween(start, end, null, "[]")) return "Live";
   return "Past";
 });
 
