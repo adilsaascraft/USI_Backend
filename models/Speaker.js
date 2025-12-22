@@ -2,9 +2,23 @@ import mongoose from "mongoose";
 
 const SpeakerSchema = new mongoose.Schema(
   {
+    prefix: {
+      type: String,
+      required: [true, "Prefix is required"],
+    },
     speakerName: {
       type: String,
       required: [true, "Speaker Name is required"],
+    },
+    degree: {
+      type: String,
+      required: [true, "Degree is required"],
+    },
+    specialization: {
+      type: String,
+    },
+    experience: {
+      type: String,
     },
     speakerProfilePicture: {
       type: String,
@@ -24,6 +38,17 @@ const SpeakerSchema = new mongoose.Schema(
       type: String,
       required: [true, "State is required"],
       trim: true,
+    },
+    city: {
+      type: String,
+      required: [true, "City is required"],
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"], //  restricts to these values
+      default: "Active",
+      required: [true, "Status is required"],
     },
   },
   { timestamps: true }

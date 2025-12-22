@@ -3,6 +3,7 @@ import express from "express";
 
 import {
   getSpeakers,
+  getActiveSpeakers,
   createSpeaker,
   updateSpeaker,
   deleteSpeaker,
@@ -15,6 +16,9 @@ const router = express.Router();
 
 // Public — Get All Speakers
 router.get("/speakers", getSpeakers);
+
+// Public — Get Active Speakers
+router.get("/speakers/active", getActiveSpeakers);
 
 // Admin — Create Speaker
 router.post(

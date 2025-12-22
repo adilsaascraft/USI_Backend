@@ -22,6 +22,26 @@ export const getSpeakers = async (req, res) => {
 };
 
 // =======================
+// Get Active Speakers (public)
+// =======================
+export const getActiveSpeakers = async (req, res) => {
+  try {
+    const activeSpeakers = await Speaker.find({ status: "Active" }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: activeSpeakers,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch active speakers",
+      error: error.message,
+    });
+  }
+};
+
+// =======================
 // Create Speaker (admin)
 // =======================
 export const createSpeaker = async (req, res) => {
