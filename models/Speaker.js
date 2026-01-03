@@ -10,14 +10,7 @@ const SpeakerSchema = new mongoose.Schema(
       type: String,
       required: [true, "Speaker Name is required"],
     },
-    degree: {
-      type: String,
-      required: [true, "Degree is required"],
-    },
     specialization: {
-      type: String,
-    },
-    experience: {
       type: String,
     },
     speakerProfilePicture: {
@@ -36,13 +29,9 @@ const SpeakerSchema = new mongoose.Schema(
     },
     state: {
       type: String,
-      required: [true, "State is required"],
-      trim: true,
     },
     city: {
       type: String,
-      required: [true, "City is required"],
-      trim: true,
     },
     status: {
       type: String,
