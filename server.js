@@ -29,7 +29,6 @@ import sendFeedbackRoutes from "./routes/sendFeedbackRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import submitQuizRoutes from "./routes/submitQuizRoutes.js";
 
-await connectDB();
 
 const app = express();
 
@@ -92,7 +91,20 @@ app.use("/api", submitQuizRoutes);
 
 
 // =======================
-// Start server
+// Start Server SAFELY
 // =======================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
