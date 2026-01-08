@@ -6,6 +6,7 @@ import {
   createConference,
   updateConference,
   deleteConference,
+  getConferenceDateRange,
 } from "../controllers/conferenceController.js";
 
 import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
@@ -39,6 +40,13 @@ router.delete(
   protect,
   authorizeRoles("admin"),
   deleteConference
+);
+
+router.get(
+  "/admin/conferences/:conferenceId/dates",
+  protect,
+  authorizeRoles("admin"),
+  getConferenceDateRange
 );
 
 export default router;

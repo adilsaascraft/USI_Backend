@@ -145,3 +145,60 @@ export const deleteConference = async (req, res) => {
     });
   }
 };
+
+// =======================
+// Get conference date range (admin only)
+// =======================
+export const getConferenceDateRange = async (req, res) => {
+  try {
+    const { conferenceId } = req.params;
+
+    const conference = await Conference.findById(conferenceId);
+    if (!conference) {
+      return res.status(404).json({
+        success: false,
+        message: "Conference not found",
+      });
+    }
+
+    const { startDate, endDate } = conference;
+
+    // Convert DD/MM/YYYY → Date
+    const parseDate = (str) => {
+      const [day, month, year] = str.split("/").map(Number);
+      return new Date(year, month - 1, day);
+    };
+
+    const formatDate = (date) => {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
+
+    const start = parseDate(startDate);
+    const end = parseDate(endDate);
+
+    const dates = [];
+    const current = new Date(start);
+
+    while (current <= end) {
+      dates.push(formatDate(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    res.json({
+      success: true,
+      conferenceId,
+      startDate,
+      endDate,
+      dates,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch conference date range",
+      error: error.message,
+    });
+  }
+};
