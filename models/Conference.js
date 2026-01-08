@@ -8,6 +8,9 @@ const ConferenceSchema = new mongoose.Schema(
       type: String,
       required: [true, "Name is required"],
     },
+    venueName: {
+      type: String,
+    },
     image: {
       type: String, // store file path or URL
       required: [true, "Image is required"],
