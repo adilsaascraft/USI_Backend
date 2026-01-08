@@ -68,3 +68,50 @@ export const getQuestionsByWebinar = async (req, res) => {
     });
   }
 };
+
+/**
+ * ==========================================
+ * DELETE Question by Webinar (Admin Only)
+ * ==========================================
+ */
+export const deleteQuestionByWebinar = async (req, res) => {
+  try {
+    const { webinarId, questionId } = req.params;
+
+    // Check webinar exists
+    const webinar = await Webinar.findById(webinarId);
+    if (!webinar) {
+      return res.status(404).json({
+        success: false,
+        message: "Webinar not found",
+      });
+    }
+
+    // Find question under this webinar
+    const question = await AskedQuestion.findOne({
+      _id: questionId,
+      webinarId: webinarId,
+    });
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found for this webinar",
+      });
+    }
+
+    // Delete question
+    await question.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Question deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete question",
+      error: error.message,
+    });
+  }
+};
