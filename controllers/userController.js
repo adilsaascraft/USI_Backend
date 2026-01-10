@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import { generateTokens } from "../utils/generateTokens.js";
 import jwt from "jsonwebtoken";
 import sendEmailWithTemplate from "../utils/sendEmail.js";
+import sendOtpSMS from "../utils/sendOtpSMS.js";
 import crypto from "crypto";
 
 // =======================
@@ -9,15 +10,8 @@ import crypto from "crypto";
 // =======================
 export const registerUser = async (req, res) => {
   try {
-    const {
-      prefix,
-      name,
-      email,
-      mobile,
-      qualification,
-      affiliation,
-      country,
-    } = req.body;
+    const { prefix, name, email, mobile, qualification, affiliation, country } =
+      req.body;
 
     // Check if email already exists
     const existingUser = await User.findOne({ email });
@@ -66,7 +60,8 @@ export const registerUser = async (req, res) => {
         await sendEmailWithTemplate({
           to: admin.email,
           name: admin.name,
-          templateKey: "2518b.554b0da719bc314.k1.03fd64b0-e86e-11f0-943e-cabf48e1bf81.19b828ef67b",
+          templateKey:
+            "2518b.554b0da719bc314.k1.03fd64b0-e86e-11f0-943e-cabf48e1bf81.19b828ef67b",
           mergeInfo: {
             name: user.name,
             email: user.email,
@@ -80,7 +75,6 @@ export const registerUser = async (req, res) => {
     } catch (err) {
       console.error("Admin email failed:", err.message);
     }
-
   } catch (error) {
     console.error("Register user error:", error);
     res.status(500).json({ message: error.message });
@@ -143,35 +137,47 @@ export const loginUser = async (req, res) => {
     // STATUS CHECK
     if (user.status !== "Approved") {
       return res.status(403).json({
-        message:
-          "You have registered successfully, wait for admin approval.",
+        message: "You have registered successfully, wait for admin approval.",
       });
     }
 
+    // =======================
+    // OTP Rate Limiting (ADD HERE)
+    // =======================
+    if (user.loginOtpExpires && user.loginOtpExpires > Date.now()) {
+      const waitSeconds = Math.ceil((user.loginOtpExpires - Date.now()) / 1000);
+
+      return res.status(429).json({
+        message: `OTP already sent. Please wait ${waitSeconds} seconds before requesting a new OTP.`,
+      });
+    }
     //  Generate 6 digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    user.loginOtp = crypto
-      .createHash("sha256")
-      .update(otp)
-      .digest("hex");
+    user.loginOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    user.loginOtpExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
+    user.loginOtpExpires = Date.now() + 2 * 60 * 1000; // 5 minutes
     await user.save({ validateBeforeSave: false });
 
     //  Send OTP Email
     await sendEmailWithTemplate({
       to: user.email,
       name: user.name,
-      templateKey: "2518b.554b0da719bc314.k1.6e2d6570-eae3-11f0-a3cd-525400c92439.19b92abe547",
+      templateKey:
+        "2518b.554b0da719bc314.k1.6e2d6570-eae3-11f0-a3cd-525400c92439.19b92abe547",
       mergeInfo: {
         name: user.name,
         otp,
       },
     });
 
-    //  Send OTP SMS (implement later)
-    // await sendOtpSMS(user.mobile, otp);
+    //  Send OTP SMS
+
+    try {
+      await sendOtpSMS(user.mobile, otp);
+    } catch (smsError) {
+      console.error("SMS sending failed:", smsError.message);
+    }
 
     return res.json({
       message: "OTP sent to your email and mobile",
@@ -182,7 +188,6 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // =======================
 // Verify OTP
@@ -195,10 +200,7 @@ export const verifyLoginOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP required" });
     }
 
-    const hashedOtp = crypto
-      .createHash("sha256")
-      .update(otp)
-      .digest("hex");
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
     const user = await User.findOne({
       _id: userId,
@@ -242,7 +244,6 @@ export const verifyLoginOtp = async (req, res) => {
   }
 };
 
-
 // =======================
 // Refresh Access Token
 // =======================
@@ -272,7 +273,6 @@ export const refreshAccessTokenUser = async (req, res) => {
   }
 };
 
-
 // =======================
 // Logout User
 // =======================
@@ -280,7 +280,6 @@ export const logoutUser = (req, res) => {
   res.clearCookie("refreshToken");
   res.json({ message: "Logged out successfully" });
 };
-
 
 // =======================
 // Get Profile
@@ -328,7 +327,9 @@ export const updateUserProfile = async (req, res) => {
     if (req.file && req.file.location) {
       // Delete old image from S3
       if (user.profilePicture) {
-        const oldKey = user.profilePicture.split(`${process.env.AWS_BUCKET_NAME}/`)[1];
+        const oldKey = user.profilePicture.split(
+          `${process.env.AWS_BUCKET_NAME}/`
+        )[1];
         if (oldKey) {
           await s3.send(
             new DeleteObjectCommand({
@@ -408,7 +409,8 @@ export const updateUserStatus = async (req, res) => {
       await sendEmailWithTemplate({
         to: user.email,
         name: user.name,
-        templateKey: "2518b.554b0da719bc314.k1.59e7fe80-e896-11f0-943e-cabf48e1bf81.19b83974e68",
+        templateKey:
+          "2518b.554b0da719bc314.k1.59e7fe80-e896-11f0-943e-cabf48e1bf81.19b83974e68",
         mergeInfo: {
           name: user.name,
           email: user.email,
