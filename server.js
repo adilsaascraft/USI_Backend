@@ -17,6 +17,7 @@ import speakerRoutes from "./routes/speakerRoutes.js";
 import assignSpeakerRoutes from "./routes/assignSpeakerRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import webinarRegistrationRoutes from "./routes/webinarRegistrationRoutes.js";
+import webinarAttendanceRoutes from "./routes/webinarAttendanceRoutes.js";
 import webinarSettingRoutes from "./routes/webinarSettingRoutes.js";
 import courseRegistrationRoutes from "./routes/courseRegistrationRoutes.js";
 import conferenceRegistrationRoutes from "./routes/conferenceRegistrationRoutes.js";
@@ -81,6 +82,8 @@ app.use("/api", speakerRoutes);
 app.use("/api", assignSpeakerRoutes);
 app.use("/api", meetingRoutes);
 app.use("/api", webinarRegistrationRoutes);
+app.use("/api", webinarAttendanceRoutes);
+
 app.use("/api", webinarSettingRoutes);
 app.use("/api", courseRegistrationRoutes);
 app.use("/api", conferenceRegistrationRoutes);

@@ -3,6 +3,7 @@
 import WebinarRegistration from "../models/WebinarRegistration.js";
 import Webinar from "../models/Webinar.js";
 import User from "../models/User.js";
+import moment from "moment-timezone";
 
 // ==============================
 // Register user into webinar
@@ -156,3 +157,136 @@ export const getUserWebinarRegistrations = async (req, res) => {
   }
 };
 
+/**
+ * =====================================================
+ * ADMIN: Get ALL registrations (attended + not attended) for particular Webinar
+ * =====================================================
+ * GET /admin/webinar/:webinarId/registrations
+ */
+export const getAllWebinarRegistrations = async (req, res) => {
+  try {
+    const { webinarId } = req.params;
+
+    const webinar = await Webinar.findById(webinarId);
+    if (!webinar) {
+      return res.status(404).json({
+        success: false,
+        message: "Webinar not found",
+      });
+    }
+
+    const registrations = await WebinarRegistration.find({ webinarId })
+      .populate("userId")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      webinar: {
+        id: webinar._id,
+        name: webinar.name,
+        startDate: webinar.startDate,
+        startTime: webinar.startTime,
+        endDate: webinar.endDate,
+        endTime: webinar.endTime,
+      },
+      total: registrations.length,
+      attendedCount: registrations.filter(r => r.attended).length,
+      notAttendedCount: registrations.filter(r => !r.attended).length,
+      data: registrations,
+    });
+  } catch (error) {
+    console.error("Get all webinar registrations error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch webinar registrations",
+      error: error.message,
+    });
+  }
+};
+/**
+ * ==========================================
+ * ADMIN: Get ONLY attended users
+ * ==========================================
+ * GET /admin/webinar/:webinarId/attended
+ */
+export const getAttendedUsers = async (req, res) => {
+  try {
+    const { webinarId } = req.params;
+
+    const webinar = await Webinar.findById(webinarId);
+    if (!webinar) {
+      return res.status(404).json({
+        success: false,
+        message: "Webinar not found",
+      });
+    }
+
+    const attendedUsers = await WebinarRegistration.find({
+      webinarId,
+      attended: true,
+    })
+      .populate("userId")
+      .sort({ attendedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      webinar: {
+        id: webinar._id,
+        name: webinar.name,
+      },
+      count: attendedUsers.length,
+      data: attendedUsers,
+    });
+  } catch (error) {
+    console.error("Get attended users error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch attended users",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * ==========================================
+ * ADMIN: Get registered BUT NOT attended users
+ * ==========================================
+ * GET /admin/webinar/:webinarId/not-attended
+ */
+export const getNotAttendedUsers = async (req, res) => {
+  try {
+    const { webinarId } = req.params;
+
+    const webinar = await Webinar.findById(webinarId);
+    if (!webinar) {
+      return res.status(404).json({
+        success: false,
+        message: "Webinar not found",
+      });
+    }
+
+    const notAttendedUsers = await WebinarRegistration.find({
+      webinarId,
+      attended: false,
+    })
+      .populate("userId")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      webinar: {
+        id: webinar._id,
+        name: webinar.name,
+      },
+      count: notAttendedUsers.length,
+      data: notAttendedUsers,
+    });
+  } catch (error) {
+    console.error("Get not attended users error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch not attended users",
+      error: error.message,
+    });
+  }
+};

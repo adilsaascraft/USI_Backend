@@ -21,6 +21,14 @@ const WebinarRegistrationSchema = new mongoose.Schema(
     membershipNumber: {
       type: String,
     },
+    // Attendance Tracking
+    attended: {
+      type: Boolean,
+      default: false,
+    },
+    attendedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
