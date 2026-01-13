@@ -31,9 +31,8 @@ const CourseModuleSchema = new mongoose.Schema(
     videoDuration: {
       type: String,
     },
-    additionalQuestions: {
-      type: [String],
-      default: [],
+    description: {
+      type: String,
     },
     additionalResources: {
       type: [String],
