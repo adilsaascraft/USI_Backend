@@ -94,6 +94,17 @@ export const getSpeakerAllVideos = async (req, res) => {
   try {
     const { speakerId } = req.params;
 
+    // ---------- Speaker Full Data
+    const speaker = await Speaker.findById(speakerId)
+      .select("prefix speakerName specialization speakerProfilePicture affiliation country state city");
+
+    if (!speaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Speaker not found",
+      });
+    }
+
     // ---------- Topics
     const topics = await Topic.find({
       $or: [
@@ -105,21 +116,21 @@ export const getSpeakerAllVideos = async (req, res) => {
       ],
     })
       .select("title topicType videoLink conferenceId sessionId startTime endTime")
-      .populate("conferenceId") //  FULL CONFERENCE DATA
+      .populate("conferenceId")
       .populate("sessionId", "sessionName startTime endTime");
 
     // ---------- Webinars
     const webinarAssignments = await AssignSpeaker.find({ speakerId })
       .populate({
         path: "webinarId",
-        options: { virtuals: true }, // dynamicStatus
+        options: { virtuals: true },
       });
 
     const webinars = webinarAssignments.map(w => w.webinarId);
 
     res.json({
       success: true,
-      speakerId,
+      speaker,              //  FULL SPEAKER DATA
       topicVideos: topics,
       webinarVideos: webinars,
     });
@@ -131,3 +142,4 @@ export const getSpeakerAllVideos = async (req, res) => {
     });
   }
 };
+
