@@ -315,29 +315,14 @@ export const getTopicById = async (req, res) => {
         populate: [
           { path: "hallId", select: "hallName" },
           { path: "trackId", select: "trackName" },
-          { path: "chairperson", select: "prefix speakerName" },
+          { path: "chairperson" },
         ],
       })
-      .populate({
-        path: "speakerId",
-        select: "prefix speakerName",
-      })
-      .populate({
-        path: "moderator",
-        select: "prefix speakerName",
-      })
-      .populate({
-        path: "panelist",
-        select: "prefix speakerName",
-      })
-      .populate({
-        path: "quizMaster",
-        select: "prefix speakerName",
-      })
-      .populate({
-        path: "teamMember",
-        select: "prefix speakerName",
-      });
+      .populate({ path: "speakerId" })
+      .populate({ path: "moderator" })
+      .populate({ path: "panelist" })
+      .populate({ path: "quizMaster" })
+      .populate({ path: "teamMember" });
 
     if (!topic) {
       return res.status(404).json({
