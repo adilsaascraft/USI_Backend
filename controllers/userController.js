@@ -229,20 +229,20 @@ export const verifyLoginOtp = async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user._id, user.role)
 
-    // 🔐 access token (middleware)
+    const isProd = process.env.NODE_ENV === 'production'
+
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,        // 🔥 MUST be true in prod
+      sameSite: isProd ? 'none' : 'lax', // 🔥 CRITICAL
       path: '/',
       maxAge: 15 * 60 * 1000,
     })
 
-    // 🔁 refresh token
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
@@ -303,11 +303,13 @@ export const refreshAccessTokenUser = async (req, res) => {
     if (!user) return res.status(401).json({ message: 'User not found' })
 
     const { accessToken } = generateTokens(user._id, user.role)
+    
+    const isProd = process.env.NODE_ENV === 'production'
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })

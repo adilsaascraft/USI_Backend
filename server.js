@@ -51,13 +51,15 @@ const allowedOrigins = [
   process.env.USER_FRONTEND_URL,
 ];
 
-const corsOptions = {
+
+const corsOptions = {                                                                 
   origin: (origin, callback) => {
     // allow any origin (including browser requests)
     callback(null, true);
   },
   credentials: true,
 };
+
 
 
 app.use(express.json());
