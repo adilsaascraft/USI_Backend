@@ -38,13 +38,8 @@ router.post("/verify-otp", verifyLoginOtp);
 // Refresh access token (GET, using cookies)
 router.post("/refresh-token", refreshAccessTokenUser);
 
-// Logout - User only
-router.post(
-  "/logout",
-  protect, // ensures user is logged in
-  authorizeRoles("user"), // user-only
-  logoutUser
-);
+// Logout
+router.post('/logout', logoutUser);
 
 // Get User Profile - User only
 router.get(
