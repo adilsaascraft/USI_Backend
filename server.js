@@ -52,15 +52,27 @@ const allowedOrigins = [
 ];
 
 
-const corsOptions = {                                                                 
-  origin: (origin, callback) => {
-    // allow any origin (including browser requests)
-    callback(null, true);
+// const corsOptions = {                                                                 
+//   origin: (origin, callback) => {
+//     // allow any origin (including browser requests)
+//     callback(null, true);
+//   },
+//   credentials: true,
+// };
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow server-to-server & Postman
+    if (!origin) return callback(null, true)
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+
+    return callback(new Error('Not allowed by CORS'))
   },
-  credentials: true,
-};
-
-
+  credentials: true, // 🔥 REQUIRED for cookies
+}
 
 app.use(express.json());
 app.use(cors(corsOptions));
