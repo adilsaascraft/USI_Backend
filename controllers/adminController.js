@@ -38,7 +38,7 @@ export const getAdminSession  = async (req, res) => {
     }
 
     // Find admin
-    const admin = await User.findById(decoded.id);
+    const admin = await User.findById(decoded.id).select("-password -passwordResetToken -passwordResetExpires");
     if (!admin || admin.role !== 'admin') {
       return res.status(401).json({
         authenticated: false,
@@ -49,18 +49,7 @@ export const getAdminSession  = async (req, res) => {
     // Return admin info
     res.json({
       authenticated: true,
-      user: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        mobile: admin.mobile,
-        role: admin.role,
-        prefix: admin.prefix,
-        qualification: admin.qualification,
-        affiliation: admin.affiliation,
-        country: admin.country,
-        status: admin.status,
-      }
+      user: admin,
     });
   } catch (error) {
     console.error("Get admin profile error:", error);
