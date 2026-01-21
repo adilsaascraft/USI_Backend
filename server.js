@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import helmet from 'helmet'
 import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
@@ -48,7 +49,6 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
-  "https://urologicalsocietyofindia.vercel.app",
   process.env.ADMIN_FRONTEND_URL,
   process.env.USER_FRONTEND_URL,
 ];
@@ -76,9 +76,9 @@ const corsOptions = {
   credentials: true, // 🔥 REQUIRED for cookies
 }
 
-
-app.use(express.json());
+app.use(helmet())
 app.use(cors(corsOptions));
+app.use(express.json());
 app.use(cookieParser()); // Needed to read cookies (refresh token)
 app.use(morgan("dev"));
 

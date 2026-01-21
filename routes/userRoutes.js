@@ -1,5 +1,4 @@
 import express from "express";
-import cookieParser from "cookie-parser";
 import {
   registerUser,
   loginUser,
@@ -18,9 +17,6 @@ import { getMyAllRegistrations } from "../controllers/userRegistrationController
 
 const router = express.Router();
 
-
-// Middleware to parse cookies
-router.use(cookieParser());
 
 // =======================
 // User Routes

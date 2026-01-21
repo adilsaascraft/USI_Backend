@@ -1,5 +1,4 @@
 import express from "express";
-import cookieParser from "cookie-parser";
 import {
   getAdminSession,
   registerAdmin,
@@ -13,8 +12,6 @@ import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Middleware to parse cookies
-router.use(cookieParser());
 
 // =======================
 // Admin Routes

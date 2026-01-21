@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import sendEmailWithTemplate from "../utils/sendEmail.js";
 import sendOtpSMS from "../utils/sendOtpSMS.js";
 import crypto from "crypto";
+import { getCookieOptions } from "../utils/cookieOptions.js";
 
 // =======================
 // User Signup (Public)
@@ -194,6 +195,8 @@ export const loginUser = async (req, res) => {
 // =======================
 export const verifyLoginOtp = async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store') 
+
     const { userId, otp } = req.body;
 
     if (!userId || !otp) {
@@ -219,28 +222,19 @@ export const verifyLoginOtp = async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user._id, user.role)
 
-    const isProd = process.env.NODE_ENV === 'production'
-
     res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
+      ...getCookieOptions(),
       maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
+      ...getCookieOptions(),
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     })
 
 
     res.json({
       message: "Login successful",
-      accessToken,
       user: {
         id: user._id,
         name: user.name,
@@ -260,6 +254,7 @@ export const verifyLoginOtp = async (req, res) => {
 // =======================
 export const refreshAccessTokenUser = async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store') 
     const token = req.cookies.refreshToken
     if (!token) {
       return res.status(401).json({ message: 'NO_REFRESH_TOKEN' })
@@ -283,21 +278,16 @@ export const refreshAccessTokenUser = async (req, res) => {
 
     const { accessToken } = generateTokens(user._id, user.role)
 
-    const isProd = process.env.NODE_ENV === 'production'
-
     //  FIX cookie expiry (see next section)
     res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
+      ...getCookieOptions(),
       maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
     res.json({ success: true })
   } catch (err) {
-    res.clearCookie('accessToken')
-    res.clearCookie('refreshToken')
+    res.clearCookie('accessToken', getCookieOptions())
+    res.clearCookie('refreshToken', getCookieOptions())
     return res.status(401).json({ message: 'INVALID_REFRESH_TOKEN' })
   }
 }
@@ -307,22 +297,10 @@ export const refreshAccessTokenUser = async (req, res) => {
 // Logout User
 // =======================
 export const logoutUser = (req, res) => {
-  const isProd = process.env.NODE_ENV === 'production'
+  res.setHeader('Cache-Control', 'no-store') 
 
-  res.clearCookie('accessToken', {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    path: '/',
-  })
-
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    path: '/',
-  })
-
+  res.clearCookie('accessToken', getCookieOptions())
+  res.clearCookie('refreshToken', getCookieOptions())
   res.json({ message: 'Logged out successfully' })
 }
 
@@ -332,6 +310,8 @@ export const logoutUser = (req, res) => {
 // =======================
 export const getUserProfile = async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store') 
+    
     const user = await User.findById(req.user._id).select(
       "-password -plainPassword -passwordResetToken -passwordResetExpires"
     );
