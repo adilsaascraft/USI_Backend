@@ -48,6 +48,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
+  "https://urologicalsocietyofindia.vercel.app",
   process.env.ADMIN_FRONTEND_URL,
   process.env.USER_FRONTEND_URL,
 ];
@@ -69,7 +70,7 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       return callback(null, true)
     }
-
+    console.error("CORS blocked origin:", origin)
     return callback(new Error('Not allowed by CORS'))
   },
   credentials: true, // 🔥 REQUIRED for cookies
