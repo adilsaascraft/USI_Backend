@@ -1,64 +1,347 @@
-import crypto from "crypto";
-import User from "../models/User.js";
-import { generateTokens } from "../utils/generateTokens.js";
-import sendEmailWithTemplate from "../utils/sendEmail.js";
-import jwt from "jsonwebtoken";
+// import crypto from "crypto";
+// import User from "../models/User.js";
+// import { generateTokens } from "../utils/generateTokens.js";
+// import sendEmailWithTemplate from "../utils/sendEmail.js";
+// import jwt from "jsonwebtoken";
 
-// =======================
-// Get Current Admin Session
-// =======================
-export const getAdminSession  = async (req, res) => {
+// // =======================
+// // Get Current Admin Session
+// // =======================
+// export const getAdminSession  = async (req, res) => {
+//   try {
+//     // Get token from cookies
+//     const token = req.cookies.accessToken;
+//     if (!token) {
+//       return res.status(401).json({
+//         authenticated: false,
+//         message: "No access token"
+//       });
+//     }
+
+//     // Verify token
+//     let decoded;
+//     try {
+//       decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     } catch (error) {
+//       return res.status(401).json({
+//         authenticated: false,
+//         message: "Invalid or expired token"
+//       });
+//     }
+
+//     // Check token type
+//     if (decoded.type !== 'access') {
+//       return res.status(401).json({
+//         authenticated: false,
+//         message: "Invalid token type"
+//       });
+//     }
+
+//     // Find admin
+//     const admin = await User.findById(decoded.id).select("-password -passwordResetToken -passwordResetExpires");
+//     if (!admin || admin.role !== 'admin') {
+//       return res.status(401).json({
+//         authenticated: false,
+//         message: "Admin not found"
+//       });
+//     }
+
+//     // Return admin info
+//     res.json({
+//       authenticated: true,
+//       user: admin,
+//     });
+//   } catch (error) {
+//     console.error("Get admin profile error:", error);
+//     res.status(500).json({
+//       authenticated: false,
+//       message: error.message
+//     });
+//   }
+// };
+
+// // =======================
+// // Admin Signup (Postman only)
+// // =======================
+// export const registerAdmin = async (req, res) => {
+//   try {
+//     const { prefix, name, email, mobile, qualification, affiliation, country, password } = req.body;
+
+//     // only one admin allowed
+//     const existing = await User.findOne({ role: "admin" });
+//     if (existing) {
+//       return res.status(400).json({ message: "Admin already exists" });
+//     }
+
+//     const admin = await User.create({
+//       prefix,
+//       name,
+//       email,
+//       mobile,
+//       qualification,
+//       affiliation,
+//       country,
+//       password,
+//       role: "admin",
+//       status: "Approved",
+//     });
+
+//     res.status(201).json({ message: "Admin created successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// // =======================
+// // Admin Login
+// // =======================
+// export const loginAdmin = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     const admin = await User.findOne({ email, role: "admin" });
+//     if (!admin) return res.status(400).json({ message: "Email does not Exist" });
+
+//     const isMatch = await admin.matchPassword(password);
+//     if (!isMatch) return res.status(400).json({ message: "You Entered Wrong Password" });
+
+//     // Generate tokens
+//     const { accessToken, refreshToken } = generateTokens(admin._id, admin.role);
+
+//     const isProd = process.env.NODE_ENV === 'production'
+
+//     res.cookie('accessToken', accessToken, {
+//       httpOnly: true,
+//       secure: isProd,
+//       sameSite: isProd ? 'none' : 'lax',
+//       path: '/',
+//       maxAge: 15 * 60 * 1000, //  15 minutes
+//     })
+
+//     res.cookie('refreshToken', refreshToken, {
+//       httpOnly: true,
+//       secure: isProd,
+//       sameSite: isProd ? 'none' : 'lax',
+//       path: '/',
+//       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+//     })
+
+//     res.json({
+//       message: "Admin login successful",
+//       accessToken,
+//       user: {
+//         id: admin._id,
+//         name: admin.name,
+//         email: admin.email,
+//         role: admin.role,
+//         mobile: admin.mobile,
+//         prefix: admin.prefix,
+//         qualification: admin.qualification,
+//         affiliation: admin.affiliation,
+//         country: admin.country,
+//         status: admin.status,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// // =======================
+// // Refresh Access Token
+// // =======================
+// export const refreshAccessToken = async (req, res) => {
+//   try {
+//     const token = req.cookies.refreshToken
+//     if (!token) {
+//       return res.status(401).json({ message: 'NO_REFRESH_TOKEN' })
+//     }
+
+//     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
+
+//     //  ADD THIS
+//     if (decoded.type !== 'refresh') {
+//       return res.status(401).json({ message: 'INVALID_REFRESH_TOKEN' })
+//     }
+
+//     const admin  = await User.findById(decoded.id)
+//     if (!admin ) {
+//       return res.status(401).json({ message: 'ADMIN_NOT_FOUND' })
+//     }
+
+//     // (ADMIN ROLE CHECK)
+//     if (admin.role !== 'admin') {
+//       return res.status(403).json({ message: 'NOT_ADMIN_TOKEN' })
+//     }
+
+//     const { accessToken } = generateTokens(admin._id, admin.role)
+
+//     const isProd = process.env.NODE_ENV === 'production'
+
+//     //  FIX cookie expiry (see next section)
+//     res.cookie('accessToken', accessToken, {
+//       httpOnly: true,
+//       secure: isProd,
+//       sameSite: isProd ? 'none' : 'lax',
+//       path: '/',
+//       maxAge: 15 * 60 * 1000, // 15 minutes
+//     })
+
+//     res.json({ success: true })
+//   } catch (err) {
+//     res.clearCookie('accessToken')
+//     res.clearCookie('refreshToken')
+//     return res.status(401).json({ message: 'INVALID_REFRESH_TOKEN' })
+//   }
+// };
+
+// // =======================
+// // Logout Admin
+// // =======================
+// export const logoutAdmin = (req, res) => {
+//   const isProd = process.env.NODE_ENV === 'production'
+
+//   res.clearCookie('accessToken', {
+//     httpOnly: true,
+//     secure: isProd,
+//     sameSite: isProd ? 'none' : 'lax',
+//     path: '/',
+//   })
+
+//   res.clearCookie('refreshToken', {
+//     httpOnly: true,
+//     secure: isProd,
+//     sameSite: isProd ? 'none' : 'lax',
+//     path: '/',
+//   })
+
+//   res.json({ message: 'Logged out successfully' })
+// };
+
+// // =======================
+// // Forgot Password
+// // =======================
+// export const forgotPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     // Find admin
+//     const admin = await User.findOne({ email, role: "admin" });
+//     if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+//     // Generate reset token
+//     const token = crypto.randomBytes(32).toString("hex");
+//     const resetToken = crypto.createHash("sha256").update(token.trim()).digest("hex");
+
+//     admin.passwordResetToken = resetToken;
+//     admin.passwordResetExpires = Date.now() + 24 * 60 * 60 * 1000;
+//     await admin.save({ validateBeforeSave: false });
+
+//     const frontendUrl = process.env.ADMIN_FRONTEND_URL;
+//     const resetUrl = `${frontendUrl}/reset-password/${token}`;
+
+//     // Send email via ZeptoMail template
+//     await sendEmailWithTemplate({
+//       to: admin.email,
+//       name: admin.name,
+//       templateKey: "2518b.554b0da719bc314.k1.6f29f192-dd74-11f0-91a1-621740bce2a6.19b3aa21729",
+//       mergeInfo: {
+//         name: admin.name,
+//         password_reset_link: resetUrl,
+//       },
+//     });
+
+//     res.json({ message: "Password reset link sent to your email address" });
+//   } catch (error) {
+//     console.error("Forgot password error:", error?.response?.data || error.message || error);
+//     res.status(500).json({ message: "Failed to send reset email" });
+//   }
+// };
+
+// // =======================
+// // Reset Password
+// // =======================
+// export const resetPassword = async (req, res) => {
+//   try {
+//     let { token } = req.params; // get token from URL
+//     const { password } = req.body;
+
+//     if (!token) return res.status(400).json({ message: "Token is required" });
+
+//     // Trim token to remove extra spaces/newlines
+//     token = token.trim();
+
+//     // Hash token to match DB
+//     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+//     const admin = await User.findOne({
+//       passwordResetToken: hashedToken,
+//       passwordResetExpires: { $gt: Date.now() },
+//     });
+
+//     if (!admin) {
+//       return res.status(400).json({ message: "Invalid or expired token" });
+//     }
+
+//     // Update password
+//     admin.password = password; // will be hashed in pre-save hook
+//     admin.passwordResetToken = null;
+//     admin.passwordResetExpires = null;
+//     await admin.save();
+
+//     res.json({ message: "Password reset successful" });
+//   } catch (error) {
+//     console.error("Reset password error:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
+import User from '../models/User.js'
+import { generateTokens } from '../utils/generateTokens.js'
+import sendEmailWithTemplate from '../utils/sendEmail.js'
+import { getCookieOptions } from '../utils/cookieOptions.js'
+
+/* =========================
+   GET CURRENT ADMIN SESSION
+========================= */
+export const getAdminSession = async (req, res) => {
   try {
-    // Get token from cookies
-    const token = req.cookies.accessToken;
+    res.setHeader('Cache-Control', 'no-store')
+
+    const token = req.cookies.accessToken
     if (!token) {
-      return res.status(401).json({
-        authenticated: false,
-        message: "No access token"
-      });
+      return res.status(401).json({ authenticated: false })
     }
 
-    // Verify token
-    let decoded;
+    let decoded
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      return res.status(401).json({
-        authenticated: false,
-        message: "Invalid or expired token"
-      });
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
+    } catch {
+      return res.status(401).json({ authenticated: false })
     }
 
-    // Check token type
     if (decoded.type !== 'access') {
-      return res.status(401).json({
-        authenticated: false,
-        message: "Invalid token type"
-      });
+      return res.status(401).json({ authenticated: false })
     }
 
-    // Find admin
-    const admin = await User.findById(decoded.id).select("-password -passwordResetToken -passwordResetExpires");
+    const admin = await User.findById(decoded.id).select(
+      '-password -passwordResetToken -passwordResetExpires'
+    )
+
     if (!admin || admin.role !== 'admin') {
-      return res.status(401).json({
-        authenticated: false,
-        message: "Admin not found"
-      });
+      return res.status(401).json({ authenticated: false })
     }
 
-    // Return admin info
     res.json({
       authenticated: true,
       user: admin,
-    });
+    })
   } catch (error) {
-    console.error("Get admin profile error:", error);
-    res.status(500).json({
-      authenticated: false,
-      message: error.message
-    });
+    res.status(500).json({ authenticated: false })
   }
-};
+}
 
 // =======================
 // Admin Signup (Postman only)
@@ -92,206 +375,175 @@ export const registerAdmin = async (req, res) => {
   }
 };
 
-// =======================
-// Admin Login
-// =======================
+
+/* =========================
+   ADMIN LOGIN
+========================= */
 export const loginAdmin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body
 
-    const admin = await User.findOne({ email, role: "admin" });
-    if (!admin) return res.status(400).json({ message: "Email does not Exist" });
+    const admin = await User.findOne({ email, role: 'admin' })
+    if (!admin) {
+      return res.status(400).json({ message: 'Email does not exist' })
+    }
 
-    const isMatch = await admin.matchPassword(password);
-    if (!isMatch) return res.status(400).json({ message: "You Entered Wrong Password" });
+    const isMatch = await admin.matchPassword(password)
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Wrong password' })
+    }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(admin._id, admin.role);
-
-    const isProd = process.env.NODE_ENV === 'production'
+    const { accessToken, refreshToken } = generateTokens(
+      admin._id,
+      admin.role
+    )
 
     res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
-      maxAge: 15 * 60 * 1000, //  15 minutes
+      ...getCookieOptions(),
+      maxAge: 15 * 60 * 1000,
     })
 
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      ...getCookieOptions(),
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     })
 
     res.json({
-      message: "Admin login successful",
-      accessToken,
+      message: 'Admin login successful',
       user: {
         id: admin._id,
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        mobile: admin.mobile,
-        prefix: admin.prefix,
-        qualification: admin.qualification,
-        affiliation: admin.affiliation,
-        country: admin.country,
-        status: admin.status,
       },
-    });
+    })
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-};
+}
 
-// =======================
-// Refresh Access Token
-// =======================
+/* =========================
+   REFRESH ACCESS TOKEN
+========================= */
 export const refreshAccessToken = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken
-    if (!token) {
+    const refreshToken = req.cookies.refreshToken
+    if (!refreshToken) {
       return res.status(401).json({ message: 'NO_REFRESH_TOKEN' })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    )
 
-    //  ADD THIS
     if (decoded.type !== 'refresh') {
       return res.status(401).json({ message: 'INVALID_REFRESH_TOKEN' })
     }
 
-    const admin  = await User.findById(decoded.id)
-    if (!admin ) {
-      return res.status(401).json({ message: 'ADMIN_NOT_FOUND' })
-    }
-
-    // (ADMIN ROLE CHECK)
-    if (admin.role !== 'admin') {
-      return res.status(403).json({ message: 'NOT_ADMIN_TOKEN' })
+    const admin = await User.findById(decoded.id)
+    if (!admin || admin.role !== 'admin') {
+      return res.status(401).json({ message: 'INVALID_USER' })
     }
 
     const { accessToken } = generateTokens(admin._id, admin.role)
 
-    const isProd = process.env.NODE_ENV === 'production'
-
-    //  FIX cookie expiry (see next section)
     res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      ...getCookieOptions(),
+      maxAge: 15 * 60 * 1000,
     })
 
     res.json({ success: true })
   } catch (err) {
-    res.clearCookie('accessToken')
-    res.clearCookie('refreshToken')
-    return res.status(401).json({ message: 'INVALID_REFRESH_TOKEN' })
+    res.clearCookie('accessToken', getCookieOptions())
+    res.clearCookie('refreshToken', getCookieOptions())
+    res.status(401).json({ message: 'REFRESH_TOKEN_EXPIRED' })
   }
-};
+}
 
-// =======================
-// Logout Admin
-// =======================
+/* =========================
+   LOGOUT
+========================= */
 export const logoutAdmin = (req, res) => {
-  const isProd = process.env.NODE_ENV === 'production'
-
-  res.clearCookie('accessToken', {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    path: '/',
-  })
-
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    path: '/',
-  })
+  res.clearCookie('accessToken', getCookieOptions())
+  res.clearCookie('refreshToken', getCookieOptions())
 
   res.json({ message: 'Logged out successfully' })
-};
+}
 
-// =======================
-// Forgot Password
-// =======================
+/* =========================
+   FORGOT PASSWORD
+========================= */
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.body
 
-    // Find admin
-    const admin = await User.findOne({ email, role: "admin" });
-    if (!admin) return res.status(404).json({ message: "Admin not found" });
+    const admin = await User.findOne({ email, role: 'admin' })
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' })
+    }
 
-    // Generate reset token
-    const token = crypto.randomBytes(32).toString("hex");
-    const resetToken = crypto.createHash("sha256").update(token.trim()).digest("hex");
+    const token = crypto.randomBytes(32).toString('hex')
+    const resetToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex')
 
-    admin.passwordResetToken = resetToken;
-    admin.passwordResetExpires = Date.now() + 24 * 60 * 60 * 1000;
-    await admin.save({ validateBeforeSave: false });
+    admin.passwordResetToken = resetToken
+    admin.passwordResetExpires = Date.now() + 24 * 60 * 60 * 1000
+    await admin.save({ validateBeforeSave: false })
 
-    const frontendUrl = process.env.ADMIN_FRONTEND_URL;
-    const resetUrl = `${frontendUrl}/reset-password/${token}`;
+    const resetUrl = `${process.env.ADMIN_FRONTEND_URL}/reset-password/${token}`
 
-    // Send email via ZeptoMail template
     await sendEmailWithTemplate({
       to: admin.email,
       name: admin.name,
-      templateKey: "2518b.554b0da719bc314.k1.6f29f192-dd74-11f0-91a1-621740bce2a6.19b3aa21729",
+      templateKey: process.env.ZEPTOMAIL_TEMPLATE_KEY,
       mergeInfo: {
         name: admin.name,
         password_reset_link: resetUrl,
       },
-    });
+    })
 
-    res.json({ message: "Password reset link sent to your email address" });
+    res.json({ message: 'Password reset link sent' })
   } catch (error) {
-    console.error("Forgot password error:", error?.response?.data || error.message || error);
-    res.status(500).json({ message: "Failed to send reset email" });
+    res.status(500).json({ message: 'Failed to send reset email' })
   }
-};
+}
 
-// =======================
-// Reset Password
-// =======================
+/* =========================
+   RESET PASSWORD
+========================= */
 export const resetPassword = async (req, res) => {
   try {
-    let { token } = req.params; // get token from URL
-    const { password } = req.body;
+    const token = req.params.token?.trim()
+    const { password } = req.body
 
-    if (!token) return res.status(400).json({ message: "Token is required" });
+    if (!token) {
+      return res.status(400).json({ message: 'Token is required' })
+    }
 
-    // Trim token to remove extra spaces/newlines
-    token = token.trim();
-
-    // Hash token to match DB
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex')
 
     const admin = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
-    });
+    })
 
     if (!admin) {
-      return res.status(400).json({ message: "Invalid or expired token" });
+      return res.status(400).json({ message: 'Invalid or expired token' })
     }
 
-    // Update password
-    admin.password = password; // will be hashed in pre-save hook
-    admin.passwordResetToken = null;
-    admin.passwordResetExpires = null;
-    await admin.save();
+    admin.password = password
+    admin.passwordResetToken = null
+    admin.passwordResetExpires = null
+    await admin.save()
 
-    res.json({ message: "Password reset successful" });
+    res.json({ message: 'Password reset successful' })
   } catch (error) {
-    console.error("Reset password error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-};
+}
