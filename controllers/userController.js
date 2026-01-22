@@ -224,12 +224,12 @@ export const verifyLoginOtp = async (req, res) => {
 
     res.cookie('accessToken', accessToken, {
       ...getCookieOptions(),
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 1 * 60 * 1000, // 1 minutes
     })
 
     res.cookie('refreshToken', refreshToken, {
       ...getCookieOptions(),
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
 
@@ -281,7 +281,7 @@ export const refreshAccessTokenUser = async (req, res) => {
     //  FIX cookie expiry (see next section)
     res.cookie('accessToken', accessToken, {
       ...getCookieOptions(),
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 1 * 60 * 1000, // 1 minutes
     })
 
     res.json({ success: true })
