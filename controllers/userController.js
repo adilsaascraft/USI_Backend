@@ -236,7 +236,7 @@ export const loginUser = async (req, res) => {
 // =======================
 export const verifyLoginOtp = async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 'no-store') 
+    res.setHeader('Cache-Control', 'no-store')
 
     const { userId, otp } = req.body;
 
@@ -265,12 +265,12 @@ export const verifyLoginOtp = async (req, res) => {
 
     res.cookie('accessToken', accessToken, {
       ...getCookieOptions(),
-      maxAge: 1 * 60 * 1000, // 1 minutes
+      maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
     res.cookie('refreshToken', refreshToken, {
       ...getCookieOptions(),
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     })
 
 
@@ -295,7 +295,7 @@ export const verifyLoginOtp = async (req, res) => {
 // =======================
 export const refreshAccessTokenUser = async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 'no-store') 
+    res.setHeader('Cache-Control', 'no-store')
     const token = req.cookies.refreshToken
     if (!token) {
       return res.status(401).json({ message: 'NO_REFRESH_TOKEN' })
@@ -322,7 +322,7 @@ export const refreshAccessTokenUser = async (req, res) => {
     //  FIX cookie expiry (see next section)
     res.cookie('accessToken', accessToken, {
       ...getCookieOptions(),
-      maxAge: 1 * 60 * 1000, // 1 minutes
+      maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
     res.json({ success: true })
@@ -338,7 +338,7 @@ export const refreshAccessTokenUser = async (req, res) => {
 // Logout User
 // =======================
 export const logoutUser = (req, res) => {
-  res.setHeader('Cache-Control', 'no-store') 
+  res.setHeader('Cache-Control', 'no-store')
 
   res.clearCookie('accessToken', getCookieOptions())
   res.clearCookie('refreshToken', getCookieOptions())
@@ -351,8 +351,8 @@ export const logoutUser = (req, res) => {
 // =======================
 export const getUserProfile = async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 'no-store') 
-    
+    res.setHeader('Cache-Control', 'no-store')
+
     const user = await User.findById(req.user._id).select(
       "-password -plainPassword -passwordResetToken -passwordResetExpires"
     );

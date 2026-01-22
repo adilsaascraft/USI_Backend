@@ -102,12 +102,12 @@ export const loginAdmin = async (req, res) => {
 
     res.cookie('accessToken', accessToken, {
       ...getCookieOptions(),
-      maxAge: 1 * 60 * 1000,
+      maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
     res.cookie('refreshToken', refreshToken, {
       ...getCookieOptions(),
-      maxAge: 5 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     })
 
     res.json({
@@ -152,7 +152,7 @@ export const refreshAccessToken = async (req, res) => {
 
     res.cookie('accessToken', accessToken, {
       ...getCookieOptions(),
-      maxAge: 1 * 60 * 1000,
+      maxAge: 15 * 60 * 1000, // 15 minutes
     })
 
     res.json({ success: true })
