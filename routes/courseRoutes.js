@@ -16,7 +16,7 @@ import { uploadCourseImage } from "../middlewares/uploadMiddleware.js";
 const router = express.Router();
 
 // Public
-router.get("/courses", getCourses);
+router.get("/courses", protect, getCourses);
 router.get("/courses/active", getActiveCourses);
 router.get("/courses/active/:id", getActiveCourseById);
 router.get("/courses/:id", getCourseById);

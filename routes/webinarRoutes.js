@@ -20,7 +20,7 @@ import { uploadWebinarFiles } from "../middlewares/uploadMiddleware.js";
 const router = express.Router();
 
 // Public: anyone can view all webinars
-router.get("/webinars", getWebinars);
+router.get("/webinars", protect, getWebinars);
 
 // Public: Get all active webinars
 router.get("/webinars/active", getActiveWebinars);
