@@ -86,7 +86,7 @@ app.use(morgan("dev"));
 // Health check
 // =======================
 app.get("/", (req, res) => {
-  res.send("USI Backend is running ..... ");
+  res.send("USI eLearning Backend by SaaScraft Studio (India) Pvt. Ltd.");
 });
 
 // =======================
