@@ -326,7 +326,6 @@ export const refreshAccessTokenUser = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.clearCookie("accessToken", getCookieOptions());
-    res.clearCookie("refreshToken", getCookieOptions());
     return res.status(401).json({ message: "INVALID_REFRESH_TOKEN" });
   }
 };

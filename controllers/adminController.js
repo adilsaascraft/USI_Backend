@@ -158,7 +158,6 @@ export const refreshAccessToken = async (req, res) => {
     res.json({ success: true })
   } catch (err) {
     res.clearCookie('accessToken', getCookieOptions())
-    res.clearCookie('refreshToken', getCookieOptions())
     res.status(401).json({ message: 'REFRESH_TOKEN_EXPIRED' })
   }
 }
