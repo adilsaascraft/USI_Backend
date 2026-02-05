@@ -67,7 +67,7 @@ export const getAllMeetings = async (req, res) => {
 export const createMeeting = async (req, res) => {
   try {
     const { webinarId } = req.params;
-    const { meetingName, meetingLink } = req.body;
+    const { meetingName, meetingLink, meetingId, passCode } = req.body;
 
     // 1️ Validate webinar
     const webinarExists = await Webinar.findById(webinarId);
@@ -92,6 +92,8 @@ export const createMeeting = async (req, res) => {
       webinarId,
       meetingName,
       meetingLink,
+      meetingId,
+      passCode,
     });
 
     res.status(201).json({
@@ -116,7 +118,7 @@ export const createMeeting = async (req, res) => {
 export const updateMeeting = async (req, res) => {
   try {
     const { id } = req.params;
-    const { meetingName, meetingLink } = req.body;
+    const { meetingName, meetingLink, meetingId, passCode } = req.body;
 
     const meeting = await Meeting.findById(id);
 
@@ -129,7 +131,9 @@ export const updateMeeting = async (req, res) => {
 
     meeting.meetingName = meetingName || meeting.meetingName;
     meeting.meetingLink = meetingLink || meeting.meetingLink;
-
+    meeting.meetingId = meetingId || meeting.meetingId;
+    meeting.passCode = passCode || meeting.passCode;
+    
     await meeting.save();
 
     res.json({

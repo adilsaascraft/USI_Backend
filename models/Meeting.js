@@ -15,6 +15,12 @@ const MeetingSchema = new mongoose.Schema(
       type: String,
       required: [true, "Meeting link is required"],
     },
+    meetingId: {
+      type: String,
+    },
+    passCode: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
