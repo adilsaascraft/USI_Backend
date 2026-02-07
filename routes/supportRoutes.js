@@ -2,7 +2,6 @@ import express from "express";
 import {
   createSupportMessage,
   getAllSupportMessages,
-  resolveSupportMessage,
   replySupportMessage,
   deleteSupportMessage,
 } from "../controllers/supportController.js";
@@ -18,12 +17,6 @@ router.post("/support-message", createSupportMessage);
 
 // Admin – Get all / filter by status
 router.get("/support-message", getAllSupportMessages);
-
-// Admin – Resolve ticket
-router.patch(
-  "/support-message/:id/resolve",
-  resolveSupportMessage
-);
 
 // Admin – Reply via email
 router.post(

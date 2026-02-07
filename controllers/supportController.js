@@ -15,6 +15,36 @@ export const createSupportMessage = async (req, res) => {
       });
     }
 
+    // ==============================
+    // CHECK LAST TICKET
+    // ==============================
+    const lastTicket = await SupportData.findOne({ email }).sort({
+      createdAt: -1,
+    });
+
+    if (lastTicket) {
+      // If already resolved → allow immediately
+      if (lastTicket.status === "OPEN") {
+        const now = new Date();
+        const created = new Date(lastTicket.createdAt);
+
+        const diffHours =
+          (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+
+        if (diffHours < 24) {
+          const remaining = Math.ceil(24 - diffHours);
+
+          return res.status(400).json({
+            message: `You can raise next ticket after ${remaining} hour(s) or wait until current ticket is resolved.`,
+            lastTicketNumber: lastTicket.supportTicketNumber,
+          });
+        }
+      }
+    }
+
+    // ==============================
+    // CREATE NEW TICKET
+    // ==============================
     let supportTicketNumber;
     let exists = true;
 
@@ -41,6 +71,7 @@ export const createSupportMessage = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 /* =======================
    Get Support Messages
@@ -70,38 +101,6 @@ export const getAllSupportMessages = async (req, res) => {
   }
 };
 
-/* =======================
-   Resolve Support Ticket
-======================= */
-export const resolveSupportMessage = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const ticket = await SupportData.findById(id);
-    if (!ticket) {
-      return res.status(404).json({
-        message: "Support ticket not found",
-      });
-    }
-
-    if (ticket.status === "RESOLVED") {
-      return res.status(400).json({
-        message: "Ticket already resolved",
-      });
-    }
-
-    ticket.status = "RESOLVED";
-    ticket.isRead = true;
-    await ticket.save();
-
-    res.status(200).json({
-      message: "Support ticket resolved successfully",
-    });
-  } catch (error) {
-    console.error("Resolve support message error:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
 
 /* =======================
    Reply to Support Ticket
@@ -109,7 +108,7 @@ export const resolveSupportMessage = async (req, res) => {
 export const replySupportMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { replyMessage, markResolved = false } = req.body;
+    const { replyMessage } = req.body;
 
     if (!replyMessage) {
       return res.status(400).json({
@@ -127,28 +126,28 @@ export const replySupportMessage = async (req, res) => {
     await sendEmailWithTemplate({
       to: ticket.email,
       name: ticket.name,
-      templateKey: process.env.ZEPTO_SUPPORT_REPLY_TEMPLATE,
+      templateKey: "2518b.554b0da719bc314.k1.b3275a70-040e-11f1-9db9-d2cf08f4ca8c.19c379e8197",
       mergeInfo: {
         TICKET_NUMBER: ticket.supportTicketNumber,
         REPLY_MESSAGE: replyMessage,
       },
     });
 
-    if (markResolved) {
-      ticket.status = "RESOLVED";
-    }
-
+    //  AUTO RESOLVE
+    ticket.status = "RESOLVED";
     ticket.isRead = true;
+
     await ticket.save();
 
     res.status(200).json({
-      message: "Reply sent successfully",
+      message: "Reply sent & ticket resolved successfully",
     });
   } catch (error) {
     console.error("Reply support message error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 /* =======================
    Delete Support Ticket
