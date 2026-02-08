@@ -128,6 +128,7 @@ export const replySupportMessage = async (req, res) => {
       name: ticket.name,
       templateKey: "2518b.554b0da719bc314.k1.b3275a70-040e-11f1-9db9-d2cf08f4ca8c.19c379e8197",
       mergeInfo: {
+        name: ticket.name,
         TICKET_NUMBER: ticket.supportTicketNumber,
         REPLY_MESSAGE: replyMessage,
       },
