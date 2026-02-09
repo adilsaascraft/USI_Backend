@@ -61,14 +61,6 @@ export const registerUser = async (req, res) => {
       country,
     } = req.body;
 
-    // ======================
-    // Document Required Check
-    // ======================
-    if (!req.file) {
-      return res.status(400).json({
-        message: "Document is required",
-      });
-    }
 
     // Check if email already exists
     const existingUser = await User.findOne({ email });

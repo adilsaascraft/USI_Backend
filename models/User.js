@@ -43,7 +43,7 @@ const UserSchema = new mongoose.Schema(
     },
     uploadDocument: {
       type: String,
-      required: [true, "Document is required"],
+      //required: [true, "Document is required"],
       trim: true,
     },
     status: {
