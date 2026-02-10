@@ -1,18 +1,15 @@
-// controllers/feedbackController.js
 import Feedback from "../models/Feedback.js";
 import Webinar from "../models/Webinar.js";
 
 /**
  * ==============================
- * CREATE Feedback (Admin only)
+ * CREATE
  * ==============================
  */
 export const createFeedback = async (req, res) => {
   try {
     const { webinarId } = req.params;
-    const { feedbacks } = req.body;
 
-    // Validate webinar
     const webinar = await Webinar.findById(webinarId);
     if (!webinar) {
       return res.status(404).json({
@@ -21,7 +18,6 @@ export const createFeedback = async (req, res) => {
       });
     }
 
-    // Check if feedback already exists for this webinar
     const existing = await Feedback.findOne({ webinarId });
     if (existing) {
       return res.status(400).json({
@@ -30,19 +26,18 @@ export const createFeedback = async (req, res) => {
       });
     }
 
-    // Create feedback
     const feedback = await Feedback.create({
       webinarId,
-      feedbacks,
+      ...req.body,
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: "Feedback created successfully",
       data: feedback,
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Failed to create feedback",
       error: error.message,
@@ -52,7 +47,7 @@ export const createFeedback = async (req, res) => {
 
 /**
  * ==============================
- * GET Feedback by Webinar (Public)
+ * GET (Public)
  * ==============================
  */
 export const getFeedbackByWebinar = async (req, res) => {
@@ -61,12 +56,12 @@ export const getFeedbackByWebinar = async (req, res) => {
 
     const feedback = await Feedback.findOne({ webinarId });
 
-    return res.json({
+    res.json({
       success: true,
       data: feedback || null,
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Failed to fetch feedback",
       error: error.message,
@@ -76,13 +71,12 @@ export const getFeedbackByWebinar = async (req, res) => {
 
 /**
  * ==============================
- * UPDATE Feedback (Admin only)
+ * UPDATE
  * ==============================
  */
 export const updateFeedback = async (req, res) => {
   try {
     const { webinarId } = req.params;
-    const { feedbacks } = req.body;
 
     const feedback = await Feedback.findOne({ webinarId });
     if (!feedback) {
@@ -92,16 +86,16 @@ export const updateFeedback = async (req, res) => {
       });
     }
 
-    feedback.feedbacks = feedbacks;
+    Object.assign(feedback, req.body);
     await feedback.save();
 
-    return res.json({
+    res.json({
       success: true,
       message: "Feedback updated successfully",
       data: feedback,
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Failed to update feedback",
       error: error.message,
@@ -111,7 +105,7 @@ export const updateFeedback = async (req, res) => {
 
 /**
  * ==============================
- * DELETE Feedback (Admin only)
+ * DELETE
  * ==============================
  */
 export const deleteFeedback = async (req, res) => {
@@ -119,6 +113,7 @@ export const deleteFeedback = async (req, res) => {
     const { webinarId } = req.params;
 
     const feedback = await Feedback.findOneAndDelete({ webinarId });
+
     if (!feedback) {
       return res.status(404).json({
         success: false,
@@ -126,12 +121,12 @@ export const deleteFeedback = async (req, res) => {
       });
     }
 
-    return res.json({
+    res.json({
       success: true,
       message: "Feedback deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Failed to delete feedback",
       error: error.message,

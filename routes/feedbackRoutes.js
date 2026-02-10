@@ -1,4 +1,3 @@
-// routes/feedbackRoutes.js
 import express from "express";
 import {
   createFeedback,
@@ -12,15 +11,16 @@ import { protect, authorizeRoles } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 /**
+ * ==============================
  * Public
+ * ==============================
  */
-router.get(
-  "/webinars/:webinarId/feedback",
-  getFeedbackByWebinar
-);
+router.get("/webinars/:webinarId/feedback", getFeedbackByWebinar);
 
 /**
- * Admin only
+ * ==============================
+ * Admin
+ * ==============================
  */
 router.post(
   "/webinars/:webinarId/feedback",
