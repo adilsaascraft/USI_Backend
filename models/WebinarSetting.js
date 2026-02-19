@@ -31,6 +31,10 @@ const WebinarSettingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    summary: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
