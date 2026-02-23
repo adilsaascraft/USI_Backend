@@ -6,7 +6,6 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
-import rateLimit from "express-rate-limit";
 
 // Routes
 import adminRoutes from "./routes/adminRoutes.js";
@@ -47,20 +46,6 @@ import supportRoutes from "./routes/supportRoutes.js";
 const app = express();
 
 // =======================
-// Rate Limiter (Global)
-// =======================
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // max requests per IP
-  message: {
-    success: false,
-    message: "Too many requests. Please try again later.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// =======================
 // CORS setup for multiple frontends
 // =======================
 const allowedOrigins = [
@@ -70,14 +55,6 @@ const allowedOrigins = [
   process.env.USER_FRONTEND_URL,
 ];
 
-
-// const corsOptions = {                                                                 
-//   origin: (origin, callback) => {
-//     // allow any origin (including browser requests)
-//     callback(null, true);
-//   },
-//   credentials: true,
-// };
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -90,7 +67,7 @@ const corsOptions = {
     console.error("CORS blocked origin:", origin)
     return callback(new Error('Not allowed by CORS'))
   },
-  credentials: true, // 🔥 REQUIRED for cookies
+  credentials: true, //  REQUIRED for cookies
 }
 
 app.use(helmet())
@@ -98,7 +75,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser()); // Needed to read cookies (refresh token)
 app.use(morgan("dev"));
-app.use(limiter);
 
 // =======================
 // Health check

@@ -3,7 +3,6 @@
 import ConferenceRegistration from "../models/ConferenceRegistration.js";
 import Conference from "../models/Conference.js";
 import User from "../models/User.js";
-import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
 
 // ==============================
 // Register user into conference
@@ -122,8 +121,6 @@ export const getUserConferenceRegistrations = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const { page, limit, skip } = getPagination(req);
-
     // Validate user
     const user = await User.findById(userId);
     if (!user) {
@@ -133,21 +130,13 @@ export const getUserConferenceRegistrations = async (req, res) => {
       });
     }
 
-    const filter = { userId };
-
-    const total = await ConferenceRegistration.countDocuments(filter);
-
-    const registrations = await ConferenceRegistration.find(filter)
+    const registrations = await ConferenceRegistration.find({ userId })
       .populate("conferenceId")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const pagination = buildPaginationMeta(total, page, limit);
+      .sort({ createdAt: -1 });
 
     return res.json({
       success: true,
-      pagination,
+      total: registrations.length,
       data: registrations.map((x) => ({
         id: x._id,
         conference: x.conferenceId,
@@ -157,7 +146,6 @@ export const getUserConferenceRegistrations = async (req, res) => {
         membershipNumber: x.membershipNumber,
       })),
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -174,8 +162,6 @@ export const getConferenceRegistrationsForAdmin = async (req, res) => {
   try {
     const { conferenceId } = req.params;
 
-    const { page, limit, skip } = getPagination(req);
-
     // Validate conference
     const conference = await Conference.findById(conferenceId);
     if (!conference) {
@@ -185,17 +171,9 @@ export const getConferenceRegistrationsForAdmin = async (req, res) => {
       });
     }
 
-    const filter = { conferenceId };
-
-    const total = await ConferenceRegistration.countDocuments(filter);
-
-    const registrations = await ConferenceRegistration.find(filter)
+    const registrations = await ConferenceRegistration.find({ conferenceId })
       .populate("userId", "name email mobile prefix")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const pagination = buildPaginationMeta(total, page, limit);
+      .sort({ createdAt: -1 });
 
     return res.json({
       success: true,
@@ -203,7 +181,7 @@ export const getConferenceRegistrationsForAdmin = async (req, res) => {
         id: conference._id,
         name: conference.name,
       },
-      pagination,
+      total: registrations.length,
       data: registrations.map((r) => ({
         registrationId: r._id,
         registeredOn: r.createdAt,
@@ -211,7 +189,6 @@ export const getConferenceRegistrationsForAdmin = async (req, res) => {
         email: r.email,
       })),
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,

@@ -1,30 +1,17 @@
 // controllers/conferenceController.js
 import Conference from "../models/Conference.js";
-import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
 
 // =======================
 // Get all conferences (public)
 // =======================
 export const getConferences = async (req, res) => {
   try {
-
-    const { page, limit, skip } = getPagination(req);
-
-    const total = await Conference.countDocuments();
-
-    const conferences = await Conference.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const pagination = buildPaginationMeta(total, page, limit);
+    const conferences = await Conference.find().sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      pagination,
-      data: conferences.map(c => c.toObject({ virtuals: true })),
+      data: conferences.map((c) => c.toObject({ virtuals: true })),
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -39,26 +26,14 @@ export const getConferences = async (req, res) => {
 // =======================
 export const getActiveConferences = async (req, res) => {
   try {
-
-    const { page, limit, skip } = getPagination(req);
-
-    const filter = { status: "Active" };
-
-    const total = await Conference.countDocuments(filter);
-
-    const conferences = await Conference.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const pagination = buildPaginationMeta(total, page, limit);
+    const conferences = await Conference.find({ status: "Active" }).sort({
+      createdAt: -1,
+    });
 
     res.json({
       success: true,
-      pagination,
-      data: conferences.map(c => c.toObject({ virtuals: true })),
+      data: conferences.map((c) => c.toObject({ virtuals: true })),
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
