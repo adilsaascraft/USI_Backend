@@ -1,6 +1,7 @@
 import Webinar from "../models/Webinar.js";
 import WebinarRegistration from "../models/WebinarRegistration.js";
 import sendEmailWithTemplate from "../utils/sendEmail.js";
+import Feedback from "../models/Feedback.js";
 import moment from "moment-timezone";
 
 
@@ -21,6 +22,16 @@ export const sendEmailToAttendedUsers = async (req, res) => {
     const webinar = await Webinar.findById(webinarId);
     if (!webinar) {
       return res.status(404).json({ message: "Webinar not found" });
+    }
+
+    // Feedback VALIDATION
+    const feedbackExists = await Feedback.findOne({ webinarId });
+
+    if (!feedbackExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback form does not exist for this webinar",
+      });
     }
 
     //  BLOCK MULTIPLE SENDS
@@ -130,6 +141,16 @@ export const sendEmailToSingleAttendedUser = async (req, res) => {
     const webinar = await Webinar.findById(webinarId);
     if (!webinar) {
       return res.status(404).json({ message: "Webinar not found" });
+    }
+
+    // Feedback VALIDATION
+    const feedbackExists = await Feedback.findOne({ webinarId });
+
+    if (!feedbackExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback form does not exist for this webinar",
+      });
     }
 
     const registration = await WebinarRegistration.findOne({
