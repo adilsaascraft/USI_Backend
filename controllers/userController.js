@@ -242,7 +242,7 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login OTP error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "No Valid credentials, Please contact technical support" });
   }
 };
 
