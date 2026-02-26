@@ -1,17 +1,19 @@
 // controllers/webinarController.js
 import Webinar from "../models/Webinar.js";
 
-
+//
 // =======================
 // Get all webinars (public)
 // =======================
 export const getWebinars = async (req, res) => {
   try {
-    const webinars = await Webinar.find().sort({ createdAt: -1 });
+    const webinars = await Webinar.find()
+      .sort({ startDateTime: -1 })
+      .lean({ virtuals: true });
 
     res.json({
       success: true,
-      data: webinars.map((w) => w.toObject({ virtuals: true })),
+      data: webinars,
     });
   } catch (error) {
     res.status(500).json({
@@ -22,18 +24,19 @@ export const getWebinars = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Get all active webinars (public)
+// Get all active webinars
 // =======================
 export const getActiveWebinars = async (req, res) => {
   try {
-    const webinars = await Webinar.find({ status: "Active" }).sort({
-      createdAt: -1,
-    });
+    const webinars = await Webinar.find({ status: "Active" })
+      .sort({ startDateTime: 1 })
+      .lean({ virtuals: true });
 
     res.json({
       success: true,
-      data: webinars.map((w) => w.toObject({ virtuals: true })),
+      data: webinars,
     });
   } catch (error) {
     res.status(500).json({
@@ -44,25 +47,25 @@ export const getActiveWebinars = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Get Upcoming + Live Webinars (Active only) - Public
+// Get Upcoming + Live Webinars
 // =======================
 export const getUpcomingWebinars = async (req, res) => {
   try {
-    const webinars = await Webinar.find({ status: "Active" }).sort({
-      createdAt: -1,
-    });
+    const now = new Date();
 
-    const result = webinars
-      .map((w) => w.toObject({ virtuals: true }))
-      .filter(
-        (w) => w.dynamicStatus === "Upcoming" || w.dynamicStatus === "Live"
-      );
+    const webinars = await Webinar.find({
+      status: "Active",
+      endDateTime: { $gte: now }, // Only upcoming or live
+    })
+      .sort({ startDateTime: 1 })
+      .lean({ virtuals: true });
 
     res.json({
       success: true,
-      count: result.length,
-      data: result,
+      count: webinars.length,
+      data: webinars,
     });
   } catch (error) {
     res.status(500).json({
@@ -73,14 +76,18 @@ export const getUpcomingWebinars = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Get Active Webinar by ID (public)
+// Get Active Webinar by ID
 // =======================
 export const getActiveWebinarById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const webinar = await Webinar.findOne({ _id: id, status: "Active" });
+    const webinar = await Webinar.findOne({
+      _id: id,
+      status: "Active",
+    }).lean({ virtuals: true });
 
     if (!webinar) {
       return res.status(404).json({
@@ -91,7 +98,7 @@ export const getActiveWebinarById = async (req, res) => {
 
     res.json({
       success: true,
-      data: webinar.toObject({ virtuals: true }),
+      data: webinar,
     });
   } catch (error) {
     res.status(500).json({
@@ -102,6 +109,7 @@ export const getActiveWebinarById = async (req, res) => {
   }
 };
 
+//
 // =======================
 // Get Active USI Webinars
 // =======================
@@ -110,11 +118,13 @@ export const getActiveUSIWebinars = async (req, res) => {
     const webinars = await Webinar.find({
       webinarType: "USI Webinar",
       status: "Active",
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ startDateTime: 1 })
+      .lean({ virtuals: true });
 
     res.json({
       success: true,
-      data: webinars.map((w) => w.toObject({ virtuals: true })),
+      data: webinars,
     });
   } catch (error) {
     res.status(500).json({
@@ -125,19 +135,22 @@ export const getActiveUSIWebinars = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Get Active Smart Learning Program Webinars
+// Get Active Smart Learning Program
 // =======================
 export const getActiveSmartLearningWebinars = async (req, res) => {
   try {
     const webinars = await Webinar.find({
       webinarType: "Smart Learning Program",
       status: "Active",
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ startDateTime: 1 })
+      .lean({ virtuals: true });
 
     res.json({
       success: true,
-      data: webinars.map((w) => w.toObject({ virtuals: true })),
+      data: webinars,
     });
   } catch (error) {
     res.status(500).json({
@@ -148,19 +161,22 @@ export const getActiveSmartLearningWebinars = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Get Active Live Operative Workshops
+// Get Active Live Workshops
 // =======================
 export const getActiveLiveWorkshops = async (req, res) => {
   try {
     const webinars = await Webinar.find({
       webinarType: "Live Operative Workshops",
       status: "Active",
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ startDateTime: 1 })
+      .lean({ virtuals: true });
 
     res.json({
       success: true,
-      data: webinars.map((w) => w.toObject({ virtuals: true })),
+      data: webinars,
     });
   } catch (error) {
     res.status(500).json({
@@ -171,19 +187,28 @@ export const getActiveLiveWorkshops = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Get single webinar (public)
+// Get Single Webinar
 // =======================
 export const getWebinarById = async (req, res) => {
   try {
     const { id } = req.params;
-    const webinar = await Webinar.findById(id);
+
+    const webinar = await Webinar.findById(id)
+      .lean({ virtuals: true });
+
     if (!webinar) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Webinar not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Webinar not found",
+      });
     }
-    res.json({ success: true, data: webinar.toObject({ virtuals: true }) });
+
+    res.json({
+      success: true,
+      data: webinar,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -193,8 +218,9 @@ export const getWebinarById = async (req, res) => {
   }
 };
 
+//
 // =======================
-// Create webinar (admin only)
+// Create Webinar
 // =======================
 export const createWebinar = async (req, res) => {
   try {
@@ -229,10 +255,9 @@ export const createWebinar = async (req, res) => {
   }
 };
 
-
-
+//
 // =======================
-// Update webinar (admin only)
+// Update Webinar
 // =======================
 export const updateWebinar = async (req, res) => {
   try {
@@ -252,7 +277,7 @@ export const updateWebinar = async (req, res) => {
       id,
       updatedData,
       { new: true, runValidators: true }
-    );
+    ).lean({ virtuals: true });
 
     if (!updatedWebinar) {
       return res.status(404).json({
@@ -263,7 +288,7 @@ export const updateWebinar = async (req, res) => {
 
     res.json({
       success: true,
-      data: updatedWebinar.toObject({ virtuals: true }),
+      data: updatedWebinar,
     });
   } catch (error) {
     res.status(500).json({
@@ -273,10 +298,9 @@ export const updateWebinar = async (req, res) => {
   }
 };
 
-
-
+//
 // =======================
-// Delete webinar (admin only)
+// Delete Webinar
 // =======================
 export const deleteWebinar = async (req, res) => {
   try {
@@ -285,12 +309,16 @@ export const deleteWebinar = async (req, res) => {
     const webinar = await Webinar.findByIdAndDelete(id);
 
     if (!webinar) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Webinar not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Webinar not found",
+      });
     }
 
-    res.json({ success: true, message: "Webinar deleted successfully" });
+    res.json({
+      success: true,
+      message: "Webinar deleted successfully",
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

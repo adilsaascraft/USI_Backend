@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import moment from "moment-timezone";
 
 // Schema
 const WebinarSchema = new mongoose.Schema(
@@ -9,76 +8,97 @@ const WebinarSchema = new mongoose.Schema(
       enum: ["USI Webinar", "Smart Learning Program", "Live Operative Workshops"],
       required: [true, "Webinar Type is required"],
     },
+
     name: {
       type: String,
       required: [true, "Name is required"],
+      trim: true,
     },
+
     image: {
-      type: String, // store file path or URL
+      type: String,
       required: [true, "Image is required"],
     },
-    startDate: {
-      type: String, // Format: DD/MM/YYYY
-      required: [true, "Start Date is required"],
+
+    // ✅ GLOBAL STANDARD (ISO UTC)
+    startDateTime: {
+      type: Date,
+      required: [true, "Start DateTime is required"],
+      index: true,
     },
-    endDate: {
-      type: String, // Format: DD/MM/YYYY
-      required: [true, "End Date is required"],
+
+    endDateTime: {
+      type: Date,
+      required: [true, "End DateTime is required"],
+      index: true,
     },
-    startTime: {
-      type: String, // Format: hh:mm A (e.g., 09:00 AM)
-      required: [true, "Start Time is required"],
-    },
-    endTime: {
-      type: String, // Format: hh:mm A (e.g., 05:00 PM)
-      required: [true, "End Time is required"],
-    },
+
+    // Keep timezone for reference / audit
     timeZone: {
-      type: String, // e.g., "Asia/Kolkata"
+      type: String,
       required: [true, "Time Zone is required"],
     },
+
     registrationType: {
       type: String,
       enum: ["paid", "free"],
       required: [true, "Registration Type is required"],
     },
+
     amount: {
       type: Number,
       default: 0,
+      min: 0,
     },
+
     status: {
       type: String,
-      enum: ["Active", "Inactive"], //  restricts to these values
+      enum: ["Active", "Inactive"],
       default: "Active",
       required: [true, "Status is required"],
+      index: true,
     },
+
     streamLink: {
       type: String,
       required: [true, "Stream Link is required"],
     },
+
     description: {
       type: String,
+      trim: true,
     },
+
     brochureUpload: {
-      type: String, // store file path or URL (5 MB max)
+      type: String,
     },
-    //Email related fields
+
     attendedMailSent: {
       type: Boolean,
       default: false,
     },
+
     notAttendedMailSent: {
       type: Boolean,
       default: false,
     },
-    // status removed from schema because we calculate it dynamically
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-/**
- *  Auto set amount = 0 when registrationType = free
- */
+//
+// ✅ INDEX OPTIMIZATION
+//
+WebinarSchema.index({ startDateTime: 1, status: 1 });
+WebinarSchema.index({ endDateTime: 1 });
+
+//
+// ✅ Ensure free webinars always have amount = 0
+//
 WebinarSchema.pre("save", function (next) {
   if (this.registrationType === "free") {
     this.amount = 0;
@@ -86,45 +106,31 @@ WebinarSchema.pre("save", function (next) {
   next();
 });
 
-/**
- *  Auto set amount = 0 when updating a webinar
- */
 WebinarSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();
 
-  if (update.registrationType === "free") {
+  if (update?.registrationType === "free") {
     update.amount = 0;
   }
 
   next();
 });
 
-/**
- * Virtual: Dynamic event status
- */
+//
+// ✅ Clean Dynamic Status (UTC comparison)
+//
 WebinarSchema.virtual("dynamicStatus").get(function () {
-  const tz = this.timeZone || "UTC";
+  const now = new Date();
 
-  const start = moment.tz(
-    `${this.startDate} ${this.startTime}`,
-    "DD/MM/YYYY hh:mm A",
-    tz
-  );
+  if (!this.startDateTime || !this.endDateTime) return "Upcoming";
 
-  const end = moment.tz(
-    `${this.endDate} ${this.endTime}`,
-    "DD/MM/YYYY hh:mm A",
-    tz
-  );
+  if (now < this.startDateTime) return "Upcoming";
+  if (now >= this.startDateTime && now <= this.endDateTime)
+    return "Live";
 
-  const now = moment.tz(tz);
-
-  if (now.isBefore(start)) return "Upcoming";
-  if (now.isBetween(start, end, null, "[]")) return "Live";
   return "Past";
 });
 
-// Avoid model overwrite during hot-reload
+// Prevent model overwrite during hot reload
 export default mongoose.models.Webinar ||
   mongoose.model("Webinar", WebinarSchema);
-
